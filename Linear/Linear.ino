@@ -132,8 +132,8 @@ void setup() {
   ledcSetup(pwm_channel_axis_x, frequence, resolution);
   ledcSetup(pwm_channel_axis_y, frequence, resolution);
   
-  attachInterrupt(PIN_ENCODE_OUT_A_AXIS_X, encoder, CHANGE);
-  attachInterrupt(PIN_ENCODE_OUT_B_AXIS_X, encoder, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(PIN_ENCODE_OUT_A_AXIS_X), encoder, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(PIN_ENCODE_OUT_B_AXIS_X), encoder, CHANGE);
 
   Serial.begin (115200); delay(1000);
   
