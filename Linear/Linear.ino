@@ -4,7 +4,7 @@
  * Project Linear 2 Axis DC Motor.
  *
  * @author  S.Sarawut
- * @date    2223/02/20
+ * @edit date    2223/05/30
  */
  
 #define PIN_PWM_AXIS_X 27
@@ -52,8 +52,8 @@ void motor_stop_axis_x() {
   ledcWrite(pwm_channel_axis_x, 00);
 }
 
-void motor_forward_axis_x(uint8_t speedx) { 
-  if(p_safety_stopx == LOW) {
+void motor_forward_axis_x(uint8_t speedx, uint8_t st_brake) { 
+  if(st_brake == LOW) {
     	digitalWrite(PIN_MOTOR_FORWARD_AXIS_X, HIGH);
 	digitalWrite(PIN_MOTOR_REVERSE_AXIS_X, LOW);
 	ledcWrite(pwm_channel_axis_x, speedx); 
@@ -63,8 +63,8 @@ void motor_forward_axis_x(uint8_t speedx) {
   }	  
 }
 
-void motor_reverse_axis_x(uint8_t speedx) { 
-  if(p_safety_startx == LOW) {
+void motor_reverse_axis_x(uint8_t speedx, uint8_t st_brake) { 
+  if(st_brake == LOW) {
   	digitalWrite(PIN_MOTOR_FORWARD_AXIS_X, LOW);
   	digitalWrite(PIN_MOTOR_REVERSE_AXIS_X, HIGH);
   	ledcWrite(pwm_channel_axis_x, speedx);
@@ -80,8 +80,8 @@ void motor_stop_axis_y() {
   ledcWrite(pwm_channel_axis_y, 00);
 }
 
-void motor_forward_axis_y(uint8_t speedy) {  
-  if(p_safety_stopy == LOW) {
+void motor_forward_axis_y(uint8_t speedy, uint8_t st_brake) {  
+  if(st_brake == LOW) {
 	digitalWrite(PIN_MOTOR_FORWARD_AXIS_Y, HIGH);
 	digitalWrite(PIN_MOTOR_REVERSE_AXIS_Y, LOW);
 	ledcWrite(pwm_channel_axis_y, speedy);
@@ -91,8 +91,8 @@ void motor_forward_axis_y(uint8_t speedy) {
   }
 }
 
-void motor_reverse_axis_y(uint8_t speedy) { 
-  if(p_safety_starty == LOW) {
+void motor_reverse_axis_y(uint8_t speedy, uint8_t st_brake) { 
+  if(st_brake == LOW) {
   	digitalWrite(PIN_MOTOR_FORWARD_AXIS_Y, LOW);
   	digitalWrite(PIN_MOTOR_REVERSE_AXIS_Y, HIGH);
   	ledcWrite(pwm_channel_axis_y, speedy);
@@ -139,12 +139,12 @@ void setup() {
 
   Serial.begin (115200); delay(1000);
   
-  while (digitalRead(PIN_SAFETY_START_AXIS_X) == LOW) {motor_reverse_axis_x(150); delay(15);} motor_stop_axis_x();
-  while (digitalRead(PIN_SAFETY_START_AXIS_Y) == LOW) {motor_reverse_axis_y(255); delay(15);} motor_stop_axis_y();
+  while (digitalRead(PIN_SAFETY_START_AXIS_X) == LOW) {motor_reverse_axis_x(150, 00); delay(15);} motor_stop_axis_x();
+  while (digitalRead(PIN_SAFETY_START_AXIS_Y) == LOW) {motor_reverse_axis_y(255, 00); delay(15);} motor_stop_axis_y();
   
   counter = 0;
   
-  Serial.println(" - start v");
+  Serial.println(" - start linear v1.0.0.1");
 }
 
 void loop() {
@@ -176,6 +176,14 @@ void loop() {
 		ix_status = 20;
 		running = true;
 	}
+	
+	/*
+		*
+		*
+		*
+		else if (p_meun1 == LOW and running == false){}
+		else if (p_meun2 == LOW and running == false){}
+	*/
 		
 	switch (ix_status) {
 		case 20: 
@@ -186,7 +194,7 @@ void loop() {
 				ix_status = 30;
 			}
 			else {
-				motor_forward_axis_x(200);
+				motor_forward_axis_x(200, p_safety_stopx);
 			}				
 			break;
 		
@@ -198,7 +206,7 @@ void loop() {
 				ix_status = 40;
 			}
 			else {
-				motor_forward_axis_y(255);
+				motor_forward_axis_y(255, p_safety_stopy);
 			}
 			break;
 		
@@ -216,7 +224,7 @@ void loop() {
 				else {ix_status = 20;}
 			}
 			else {
-				motor_reverse_axis_y(255);
+				motor_reverse_axis_y(255, p_safety_starty);
 			}
 			break;
 			
@@ -229,16 +237,21 @@ void loop() {
         			ix_step = 0;
 			}
 			else {
-				motor_reverse_axis_x(150);
+				motor_reverse_axis_x(150, p_safety_startx);
 			}
 			break;
 			
 		default:
+			motor_stop_axis_y();
+			motor_stop_axis_x();
+				
+			running = false;
+			ix_status = 0;
+			ix_step = 0;
 			break;
 	}
 
 	sprintf(buff_str, " - ix_status:%d ix_step:%d running:%d p_count:%f \n", ix_status, ix_step, running, p_count);
-	Serial.print(buff_str);
-
+	Serial.print(buff_str); 
 	delay(10);
 }
